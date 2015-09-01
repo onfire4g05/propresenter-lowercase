@@ -8,6 +8,8 @@ class Lowercase {
 	protected $uc_strings = [];
 	/** @var string ProPresenter document data */
 	protected $file_data;
+	/** @var bool Sentence case */
+	protected $sentence = false;
 
 	/**
 	 * Set words to transform
@@ -32,7 +34,7 @@ class Lowercase {
 		if(!file_exists($filename)) throw new LowercaseException('File not found.');
 		
 		$this->file_data = file_get_contents($filename);
-		
+
 		return $this;
 	}
 
@@ -70,7 +72,21 @@ class Lowercase {
 			}, $text);
 		}
 
+		if($this->sentence) $text = $this->transformSentenceCase($text);
+
 		return base64_encode($text);
+	}
+
+	public function transformSentenceCase($text) {
+		return preg_replace_callback('/\\\cf1([a-z \\\r\n]*)/is', function($matches) {
+			$lines = explode("\n", $matches[1]);
+			foreach($lines as &$line) {
+				$line = ltrim($line);
+				$line = ' ' . ucfirst($line);
+			}
+			//var_dump($matches);//die;
+			return implode("\n", $lines);
+		}, $text);
 	}
 
 	/**
@@ -92,6 +108,21 @@ class Lowercase {
 		return $this;
 	}
 
+	public function setSentenceCase($sc) {
+		$this->sentence = (bool)$sc;
+		return $this;
+	}
+
+	public function isSong() {
+		return strpos($this->file_data, 'category="Song"') === false ? false : true;
+	}
+
+	public function save($folder, $filename, $prefix = 'LC - ', $postfix = '') {
+		
+		file_put_contents($folder . '/' . $prefix . str_replace('.pro5', $postfix . '.pro5', $filename), $this->transform());
+		
+	}
+	
 	/**
 	 * Do all transformations
 	 * Does all transforms, sends to browser and returns object
@@ -99,11 +130,45 @@ class Lowercase {
 	 * @param array $post_file $_FILE post array
 	 * @param string $prefix
 	 * @param string $postfix
+	 * @param bool $sentence Every work should be capitalized
 	 * @return self
 	 */
-	public static function quickTransform($words, $post_file, $prefix = '', $postfix = '') {
+	public static function quickTransformFolder($words, $folder, $prefix = '', $postfix = '', $sentence = false) {
+		$folder_list = scandir($folder);
+
+		foreach($folder_list as $file) {
+			if($file === '.' || $file === '..') continue;
+
+			$uc_obj = new self();
+			$uc_obj->setUcStrings($words)
+				->setSentenceCase($sentence)
+				->loadFile($folder . '/' . $file);
+			if($uc_obj->isSong()) {
+				$uc_obj->save(
+					$folder . '/lc',
+					$file,
+					$prefix,
+					$postfix
+				);
+			}
+		}
+		return $uc_obj;
+	}
+
+	/**
+	 * Do all transformations
+	 * Does all transforms, sends to browser and returns object
+	 * @param string|array $words
+	 * @param array $post_file $_FILE post array
+	 * @param string $prefix
+	 * @param string $postfix
+	 * @param bool $sentence Every work should be capitalized
+	 * @return self
+	 */
+	public static function quickTransform($words, $post_file, $prefix = '', $postfix = '', $sentence = false) {
 		$uc_obj = new self();
 		$uc_obj->setUcStrings($words)
+			->setSentenceCase($sentence)
 			->loadFile($post_file['tmp_name'])
 			->download(
 				$post_file['name'],

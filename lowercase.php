@@ -2,9 +2,9 @@
 
 // Default words to capitalize
 $caps_words = [
-	'You', 'I', 'God', 'Jesus', 'Him', 'King',
+	'You', 'God', 'Jesus', 'Him', 'King',
 	'Lord', 'Father', 'Savior', 'Saviour', 'Christ', "You're", 'Holy Spirit',
-	"I'll", 'Spirit', 'Man of Sorrows', 'Man of Suffering',
+	'Spirit', 'Man of Sorrows', 'Man of Suffering',
 	'Your', 'He', 'His', 'Yours', 'King of Glory', 'Hosanna',
 	'Great I Am', 'King of Majesty', 'Lamb of God'
 ];
@@ -16,7 +16,8 @@ if(!empty($_FILES['pro']['tmp_name'])) {
 			isset($_POST['words']) ? $_POST['words'] : $caps_words,
 			$_FILES['pro'],
 			isset($_POST['prefix']) ? $_POST['prefix'] : '',
-			isset($_POST['postfix']) ? $_POST['postfix'] : ''
+			isset($_POST['postfix']) ? $_POST['postfix'] : '',
+			isset($_POST['sentence'])
 		);
 	} catch(LowercaseException $e) {
 		die('Error transforming: ' . $e->getMessage());
@@ -40,28 +41,34 @@ if(!empty($_FILES['pro']['tmp_name'])) {
 	<div id="header">
 		<h1>ProPresenter5 to Lowercase Transformer</h1>
 	</div>
-	<form action="./pro.php" method="post" enctype="multipart/form-data">
-	<p>Choose a ProPresenter 5 document to transform:</p>
-	<div class="lcInput">
-		<input type="file" name="pro" onchange="updateFilename(this.value)" />
-	</div>
-	<p>You can now add a prefix and/or postfix to the file to ensure you do not overwrite any current document loaded into ProPresenter. It is recommended you keep these settings the same.</p>
-	<div class="lcInput">
-		<input type="text" name="prefix" id="" value="LC - " size="5" />
-		<span id="currentFilename">current filename</span>
-		<input type="text" name="postfix" value="" size="5" />
-		.pro5
-	</div>
-	<p>Words to always capitalize:</p>
-	<div class="lcInput">
-		<textarea name="words" rows="10" cols="40"><?php echo implode("\n", $caps_words) ?></textarea>
-	</div>
-	<div class="lcInput">
-		<button type="submit">
-			Convert to Lowercase
-		</button>
-	</div>
-</form>
+	<form action="?" method="post" enctype="multipart/form-data">
+		<p>Choose a ProPresenter 5 document to transform:</p>
+		<div class="lcInput">
+			<input type="file" name="pro" onchange="updateFilename(this.value)" />
+		</div>
+		<p>You can now add a prefix and/or postfix to the file to ensure you do not overwrite any current document loaded into ProPresenter. It is recommended you keep these settings the same.</p>
+		<div class="lcInput">
+			<input type="text" name="prefix" id="" value="LC - " size="5" />
+			<span id="currentFilename">current filename</span>
+			<input type="text" name="postfix" value="" size="5" />
+			.pro5
+		</div>
+		<p>Words to always capitalize:</p>
+		<div class="lcInput">
+			<textarea name="words" rows="10" cols="40"><?php echo implode("\n", $caps_words) ?></textarea>
+		</div>
+		<div class="lcInput">
+			<label>
+				<input type="checkbox" name="sentence" id="" checked="checked" /> Sentence case
+			</label>
+		</div>
+		<div class="lcInput">
+			<button type="submit">
+				Convert to Lowercase
+			</button>
+		</div>
+	</form>
+</div>
 <script>
 updateFilename = (function(name) {
 	var filename = name.split(/(\\|\/)/g).pop();
