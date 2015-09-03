@@ -73,19 +73,18 @@ class Lowercase {
 		}
 
 		if($this->sentence) $text = $this->transformSentenceCase($text);
-
 		return base64_encode($text);
 	}
 
 	public function transformSentenceCase($text) {
-		return preg_replace_callback('/\\\cf1([a-z \\\r\n]*)/is', function($matches) {
+		return preg_replace_callback('/\\\cf1([a-z0-9\' \\\r\n]*)\}/is', function($matches) {
 			$lines = explode("\n", $matches[1]);
 			foreach($lines as &$line) {
 				$line = ltrim($line);
-				$line = ' ' . ucfirst($line);
+				$line = ucfirst($line);
 			}
-			//var_dump($matches);//die;
-			return implode("\n", $lines);
+
+			return '\\cf1 ' . implode("\n", $lines) . '}';
 		}, $text);
 	}
 
@@ -143,14 +142,14 @@ class Lowercase {
 			$uc_obj->setUcStrings($words)
 				->setSentenceCase($sentence)
 				->loadFile($folder . '/' . $file);
-			if($uc_obj->isSong()) {
-				$uc_obj->save(
-					$folder . '/lc',
-					$file,
-					$prefix,
-					$postfix
-				);
-			}
+			if(!$uc_obj->isSong()) continue;
+			
+			$uc_obj->save(
+				$folder . '/lc',
+				$file,
+				$prefix,
+				$postfix
+			);
 		}
 		return $uc_obj;
 	}
