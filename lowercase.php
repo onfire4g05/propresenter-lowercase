@@ -17,7 +17,8 @@ if(!empty($_FILES['pro']['tmp_name'])) {
 			$_FILES['pro'],
 			isset($_POST['prefix']) ? $_POST['prefix'] : '',
 			isset($_POST['postfix']) ? $_POST['postfix'] : '',
-			isset($_POST['sentence'])
+			isset($_POST['sentence']),
+			isset($_POST['transition'])
 		);
 	} catch(LowercaseException $e) {
 		die('Error transforming: ' . $e->getMessage());
@@ -59,7 +60,12 @@ if(!empty($_FILES['pro']['tmp_name'])) {
 		</div>
 		<div class="lcInput">
 			<label>
-				<input type="checkbox" name="sentence" id="" checked="checked" /> Sentence case
+				<input type="checkbox" name="sentence" id="" checked="checked" /> Sentence case - Please let me know if there's any issue with this.
+			</label>
+		</div>
+		<div class="lcInput">
+			<label>
+				<input type="checkbox" name="transition" /> Remove Transitions - Delete transitions on all slides.
 			</label>
 		</div>
 		<div class="lcInput">

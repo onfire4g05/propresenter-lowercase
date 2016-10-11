@@ -77,14 +77,13 @@ class Lowercase {
 	}
 
 	public function transformSentenceCase($text) {
-		return preg_replace_callback('/\\\cf1([a-z0-9\' \\\r\n]*)\}/is', function($matches) {
-			$lines = explode("\n", $matches[1]);
-			foreach($lines as &$line) {
-				$line = ltrim($line);
-				$line = ucfirst($line);
-			}
-
-			return '\\cf1 ' . implode("\n", $lines) . '}';
+		//var_dump($text);//die;
+		
+		//\\([a-z0-9]*) ([a-z0-9\\\r\n\n \']*)\} - new style
+		//\\\cf1([a-z0-9\' \\\r\n]*)\} - old style
+		return preg_replace_callback('/\\\([a-z0-9]*) ([a-z0-9\\\r\n\n \'\-]*)\}/is', function($matches) {
+			$matches[2] = ucfirst(ltrim($matches[2]));
+			return '\\' . $matches[1] . ' ' . $matches[2] . '}';
 		}, $text);
 	}
 
@@ -117,9 +116,14 @@ class Lowercase {
 	}
 
 	public function save($folder, $filename, $prefix = 'LC - ', $postfix = '') {
-		
 		file_put_contents($folder . '/' . $prefix . str_replace('.pro5', $postfix . '.pro5', $filename), $this->transform());
-		
+	}
+	
+	public function removeTransitions() {
+		$this->file_data = preg_replace(
+			'/<_-RVProTransitionObject-_transitionObject(.*)<\/_-RVProTransitionObject-_transitionObject>/U',
+			'', $this->file_data);
+		return $this;
 	}
 	
 	/**
@@ -132,7 +136,7 @@ class Lowercase {
 	 * @param bool $sentence Every work should be capitalized
 	 * @return self
 	 */
-	public static function quickTransformFolder($words, $folder, $prefix = '', $postfix = '', $sentence = false) {
+	public static function quickTransformFolder($words, $folder, $prefix = '', $postfix = '', $sentence = false, $rem_trans = false) {
 		$folder_list = scandir($folder);
 
 		foreach($folder_list as $file) {
@@ -142,6 +146,7 @@ class Lowercase {
 			$uc_obj->setUcStrings($words)
 				->setSentenceCase($sentence)
 				->loadFile($folder . '/' . $file);
+			if($rem_trans) $uc_obj->removeTransitions();
 			if(!$uc_obj->isSong()) continue;
 			
 			$uc_obj->save(
@@ -164,12 +169,13 @@ class Lowercase {
 	 * @param bool $sentence Every work should be capitalized
 	 * @return self
 	 */
-	public static function quickTransform($words, $post_file, $prefix = '', $postfix = '', $sentence = false) {
+	public static function quickTransform($words, $post_file, $prefix = '', $postfix = '', $sentence = false, $rem_trans = false) {
 		$uc_obj = new self();
 		$uc_obj->setUcStrings($words)
 			->setSentenceCase($sentence)
-			->loadFile($post_file['tmp_name'])
-			->download(
+			->loadFile($post_file['tmp_name']);
+		if($rem_trans) $uc_obj->removeTransitions();
+		$uc_obj->download(
 				$post_file['name'],
 				$prefix,
 				$postfix
